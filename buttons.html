@@ -9,16 +9,16 @@
 
   <style>
     :root{
-      /* DIFFERENT color scheme (neon/ink + violet) */
+  
       --bg: #07060b;
       --panel: rgba(16, 14, 26, 0.62);
       --panel-solid: #0f0d18;
       --text: rgba(245, 244, 255, 0.78);
       --title: #ffffff;
 
-      --accent: #8a5cff;      /* violet */
-      --accent2: #48e7ff;     /* cyan */
-      --accent3: #ff5ccf;     /* pink (subtle use) */
+      --accent: #8a5cff;    
+      --accent2: #48e7ff;  
+      --accent3: #ff5ccf;  
 
       --border: rgba(255,255,255,0.10);
       --border2: rgba(138,92,255,0.25);
@@ -40,13 +40,13 @@
       overflow-x: hidden;
     }
 
-    /* ===== Background texture (no "AI blobs") ===== */
+  
     .bg-texture{
       position: fixed; inset: 0;
       pointer-events: none;
       z-index: 0;
       background:
-        /* subtle vignette */
+        
         radial-gradient(1200px 700px at 20% 10%, rgba(138,92,255,0.10), transparent 60%),
         radial-gradient(1000px 650px at 80% 90%, rgba(72,231,255,0.08), transparent 60%),
         linear-gradient(180deg, #07060b 0%, #05040a 55%, #060512 100%);
@@ -56,7 +56,7 @@
       position:absolute; inset:0;
       opacity:.12;
       background:
-        /* halftone dots */
+   
         radial-gradient(circle, rgba(255,255,255,.18) 1px, transparent 1.5px) 0 0/14px 14px;
       mix-blend-mode: overlay;
     }
@@ -65,7 +65,7 @@
       position:absolute; inset:-80px;
       opacity:.07;
       background:
-        /* faint ink lines */
+       
         repeating-linear-gradient(135deg,
           rgba(255,255,255,.22) 0px,
           rgba(255,255,255,.22) 1px,
@@ -75,7 +75,7 @@
       mix-blend-mode: overlay;
     }
 
-    /* ===== Spotlight “focus” effect (anime vibe, not museum gold) ===== */
+  
     body::after{
       content:"";
       position: fixed; inset:0;
@@ -91,7 +91,7 @@
       mix-blend-mode: screen;
     }
 
-    /* ===== Scroll progress ===== */
+    /* ===== scroll progress ===== */
     #progress{
       position: fixed; top: 0; left: 0; width: 100%; height: 3px;
       z-index: 9999;
@@ -104,7 +104,7 @@
       box-shadow: 0 0 14px rgba(72,231,255,0.25);
     }
 
-    /* ===== Custom cursor (NOT leaf) ===== */
+ 
     *{ cursor: none; }
     #cursor{
       position: fixed;
@@ -120,7 +120,7 @@
       backdrop-filter: blur(2px);
     }
     #cursor::after{
-      /* little “spark” dot */
+    
       content:"";
       position:absolute;
       width: 4px; height: 4px;
@@ -136,7 +136,7 @@
       background: rgba(255,92,207,0.08);
     }
 
-    /* ===== Scroll hint ===== */
+    
     .scroll-indicator{
       position: fixed;
       bottom: 36px;
@@ -185,7 +185,7 @@
       60% { transform: translateY(-6px) rotate(45deg); }
     }
 
-    /* ===== Nav ===== */
+    
     nav{
       position: sticky;
       top: 0;
@@ -233,7 +233,7 @@
     }
     .nav-links a:hover::after{ width: 100%; }
 
-    /* ===== Main layout (keep the "style" of image + text, but change details) ===== */
+  
     .container{
       position: relative;
       z-index: 5;
@@ -245,7 +245,7 @@
       gap: 46px;
     }
 
-    /* Left sticky “feature image” stage */
+    
     .stage{
       position: sticky;
       top: 110px;
@@ -496,7 +496,7 @@
       transform: scale(1.15);
     }
 
-    /* ===== Essay snippets beneath slider ===== */
+    
     .snippets{
       margin-top: 18px;
       display:grid;
@@ -629,7 +629,7 @@
       .snippets{ grid-template-columns: 1fr; }
       *{ cursor: auto !important; }
       #cursor{ display:none; }
-      body::after{ display:none; } /* spotlight off on mobile */
+      body::after{ display:none; } 
     }
   </style>
 </head>
@@ -660,7 +660,7 @@
   </nav>
 
   <main class="container">
-    <!-- LEFT: Feature image (sticky) -->
+  
     <section class="stage" aria-label="Feature image panel">
       <div class="stage-top">
         <div class="label">SAMPLE VISUAL</div>
@@ -668,8 +668,7 @@
       </div>
 
       <div class="stage-media">
-        <!-- Replace this with your own licensed/royalty-free image -->
-        <!-- <img src="YOUR_IMAGE_URL_HERE" alt="Anime-themed visual" /> -->
+    
 
         <div class="fallback">
           <div>
@@ -683,7 +682,7 @@
       </div>
     </section>
 
-    <!-- RIGHT: Main text (NOT the whole essay, but styled blocks) -->
+
     <section class="panel" aria-label="Essay highlights">
       <h1>Beating the Stereotype</h1>
       <p class="sub">
@@ -732,7 +731,7 @@
           <div class="slides" id="slides">
             <!-- Slide 1 -->
             <div class="slide">
-              <!-- Replace these with your own images -->
+      
               <img src="https://miro.medium.com/v2/resize:fit:1400/0*KbgXAAO85cabxp3S.png" alt="Gallery image 1">
               <div class="overlay"></div>
               <div class="note">Vinland Saga: Anime about rejecting violence and redemption.</div>
@@ -908,4 +907,5 @@
   </script>
 </body>
 </html>
+
 
