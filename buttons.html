@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anime Stereotype Research Artifact</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      /* DIFFERENT color scheme (neon/ink + violet) */
+      --bg: #07060b;
+      --panel: rgba(16, 14, 26, 0.62);
+      --panel-solid: #0f0d18;
+      --text: rgba(245, 244, 255, 0.78);
+      --title: #ffffff;
+
+      --accent: #8a5cff;      /* violet */
+      --accent2: #48e7ff;     /* cyan */
+      --accent3: #ff5ccf;     /* pink (subtle use) */
+
+      --border: rgba(255,255,255,0.10);
+      --border2: rgba(138,92,255,0.25);
+
+      --serif: 'Playfair Display', serif;
+      --sans: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial;
+
+      --ease: all .45s cubic-bezier(.25,1,.5,1);
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{ height: 100%; }
+    body{
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.85;
+      overflow-x: hidden;
+    }
+
+    /* ===== Background texture (no "AI blobs") ===== */
+    .bg-texture{
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        /* subtle vignette */
+        radial-gradient(1200px 700px at 20% 10%, rgba(138,92,255,0.10), transparent 60%),
+        radial-gradient(1000px 650px at 80% 90%, rgba(72,231,255,0.08), transparent 60%),
+        linear-gradient(180deg, #07060b 0%, #05040a 55%, #060512 100%);
+    }
+    .bg-texture::before{
+      content:"";
+      position:absolute; inset:0;
+      opacity:.12;
+      background:
+        /* halftone dots */
+        radial-gradient(circle, rgba(255,255,255,.18) 1px, transparent 1.5px) 0 0/14px 14px;
+      mix-blend-mode: overlay;
+    }
+    .bg-texture::after{
+      content:"";
+      position:absolute; inset:-80px;
+      opacity:.07;
+      background:
+        /* faint ink lines */
+        repeating-linear-gradient(135deg,
+          rgba(255,255,255,.22) 0px,
+          rgba(255,255,255,.22) 1px,
+          transparent 9px,
+          transparent 18px);
+      transform: rotate(1deg);
+      mix-blend-mode: overlay;
+    }
+
+    /* ===== Spotlight “focus” effect (anime vibe, not museum gold) ===== */
+    body::after{
+      content:"";
+      position: fixed; inset:0;
+      pointer-events:none;
+      z-index: 2;
+      background: radial-gradient(
+        circle 260px at var(--mx, 50%) var(--my, 50%),
+        rgba(255,255,255,0.045) 0%,
+        rgba(138,92,255,0.035) 25%,
+        transparent 62%,
+        rgba(0,0,0,0.78) 100%
+      );
+      mix-blend-mode: screen;
+    }
+
+    /* ===== Scroll progress ===== */
+    #progress{
+      position: fixed; top: 0; left: 0; width: 100%; height: 3px;
+      z-index: 9999;
+      background: transparent;
+    }
+    #progress > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      box-shadow: 0 0 14px rgba(72,231,255,0.25);
+    }
+
+    /* ===== Custom cursor (NOT leaf) ===== */
+    *{ cursor: none; }
+    #cursor{
+      position: fixed;
+      width: 18px; height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(72,231,255,0.75);
+      box-shadow: 0 0 18px rgba(138,92,255,0.25);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10000;
+      transition: width .18s ease, height .18s ease, border-color .18s ease, background-color .18s ease;
+      background: rgba(138,92,255,0.10);
+      backdrop-filter: blur(2px);
+    }
+    #cursor::after{
+      /* little “spark” dot */
+      content:"";
+      position:absolute;
+      width: 4px; height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.85);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px rgba(72,231,255,0.55);
+    }
+    #cursor.active{
+      width: 36px; height: 36px;
+      border-color: rgba(255,92,207,0.65);
+      background: rgba(255,92,207,0.08);
+    }
+
+    /* ===== Scroll hint ===== */
+    .scroll-indicator{
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      gap: 10px;
+      pointer-events:none;
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .scroll-indicator.hidden{
+      opacity: 0;
+      transform: translateX(-50%) translateY(18px);
+    }
+    .scroll-indicator .txt{
+      font-size: 0.65rem;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(72,231,255,0.85);
+      text-shadow: 0 0 12px rgba(72,231,255,0.18);
+      font-weight: 700;
+    }
+    .chevrons{
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+      opacity: .9;
+    }
+    .chev{
+      width: 12px; height: 12px;
+      border-right: 2px solid rgba(138,92,255,0.9);
+      border-bottom: 2px solid rgba(138,92,255,0.9);
+      transform: rotate(45deg);
+      animation: bounce 1.8s infinite;
+      filter: drop-shadow(0 0 10px rgba(138,92,255,0.2));
+    }
+    .chev:nth-child(2){ animation-delay: .15s; opacity: .75; }
+    .chev:nth-child(3){ animation-delay: .30s; opacity: .55; }
+
+    @keyframes bounce{
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0) rotate(45deg); }
+      40% { transform: translateY(-10px) rotate(45deg); }
+      60% { transform: translateY(-6px) rotate(45deg); }
+    }
+
+    /* ===== Nav ===== */
+    nav{
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      backdrop-filter: blur(18px);
+      background: rgba(7,6,11,0.60);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 22px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand{
+      font-family: var(--serif);
+      color: var(--title);
+      letter-spacing: 2px;
+      font-size: 0.95rem;
+    }
+    .nav-links a{
+      color: rgba(72,231,255,0.88);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.72rem;
+      margin-left: 18px;
+      position: relative;
+      padding: 6px 0;
+      transition: var(--ease);
+    }
+    .nav-links a::after{
+      content:"";
+      position:absolute;
+      left: 50%;
+      bottom: 0;
+      width: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      transform: translateX(-50%);
+      transition: var(--ease);
+    }
+    .nav-links a:hover::after{ width: 100%; }
+
+    /* ===== Main layout (keep the "style" of image + text, but change details) ===== */
+    .container{
+      position: relative;
+      z-index: 5;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 44px 22px 90px;
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 46px;
+    }
+
+    /* Left sticky “feature image” stage */
+    .stage{
+      position: sticky;
+      top: 110px;
+      align-self: start;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: rgba(16,14,26,0.55);
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.40);
+    }
+    .stage-top{
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display:flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .stage-top .label{
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      font-size: 0.62rem;
+      color: rgba(255,255,255,0.60);
+    }
+    .stage-top .chip{
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(72,231,255,0.86);
+      border: 1px solid rgba(72,231,255,0.22);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(7,6,11,0.35);
+    }
+
+    .stage-media{
+      position: relative;
+      aspect-ratio: 4 / 5;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.72)),
+        repeating-linear-gradient(135deg,
+          rgba(255,255,255,0.08) 0px,
+          rgba(255,255,255,0.08) 2px,
+          transparent 10px,
+          transparent 18px);
+    }
+    .stage-media img{
+      position:absolute; inset:0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: contrast(1.08) brightness(0.92);
+      opacity: 0.92;
+      transform: scale(1.02);
+    }
+    .stage-media .fallback{
+      position:absolute; inset: 18px;
+      border-radius: 18px;
+      border: 1px dashed rgba(255,255,255,0.20);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding: 18px;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      background: rgba(7,6,11,0.25);
+    }
+
+    .stage-caption{
+      padding: 16px 18px 18px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.92rem;
+      color: rgba(245,244,255,0.74);
+    }
+    .stage-caption b{ color: var(--title); }
+
+    /* Right content panel */
+    .panel{
+      border-radius: 26px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      padding: 34px 32px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    }
+
+    h1{
+      margin: 0 0 16px;
+      font-family: var(--serif);
+      color: var(--title);
+      font-size: clamp(2.4rem, 4.2vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: .5px;
+    }
+    .sub{
+      margin: 0 0 22px;
+      color: rgba(245,244,255,0.72);
+      font-size: 1rem;
+      max-width: 62ch;
+    }
+
+    .divider-quote{
+      margin: 26px 0;
+      padding: 18px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 1.25rem;
+      color: rgba(255,255,255,0.92);
+      position: relative;
+    }
+    .divider-quote::before{
+      content:"";
+      position:absolute;
+      left: 0; right: 0; top: -1px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(72,231,255,0.50), transparent);
+      opacity: .65;
+    }
+
+    .mini{
+      display:grid;
+      gap: 14px;
+    }
+    .mini .block{
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(7,6,11,0.25);
+    }
+    .mini .kicker{
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      font-size: 0.62rem;
+      color: rgba(72,231,255,0.85);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    /* ===== Slider section ===== */
+    .section{
+      margin-top: 56px;
+    }
+    .section h2{
+      font-family: var(--serif);
+      color: var(--title);
+      font-size: 2rem;
+      margin: 0 0 12px;
+    }
+    .section p.lede{
+      margin: 0 0 18px;
+      color: rgba(245,244,255,0.70);
+      max-width: 70ch;
+    }
+
+    .slider{
+      border-radius: 26px;
+      border: 1px solid var(--border);
+      background: rgba(16,14,26,0.55);
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    }
+    .slides{
+      display:flex;
+      transition: transform .55s cubic-bezier(.25,1,.5,1);
+      will-change: transform;
+    }
+    .slide{
+      min-width: 100%;
+      aspect-ratio: 16 / 9;
+      position: relative;
+      background: #0b0a12;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .slide img{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit: cover;
+      filter: contrast(1.05) brightness(0.92);
+      opacity: 0.95;
+    }
+    .slide .overlay{
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.78));
+    }
+    .slide .note{
+      position:absolute;
+      left: 18px; bottom: 16px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(7,6,11,0.35);
+      color: rgba(255,255,255,0.88);
+      font-size: 0.92rem;
+      max-width: 70%;
+      backdrop-filter: blur(10px);
+    }
+
+    .slider-btn{
+      position:absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px; height: 44px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(7,6,11,0.35);
+      color: rgba(255,255,255,0.88);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor: pointer;
+      transition: var(--ease);
+      z-index: 5;
+    }
+    .slider-btn:hover{
+      border-color: rgba(72,231,255,0.28);
+      transform: translateY(-50%) translateY(-1px);
+      box-shadow: 0 18px 40px rgba(72,231,255,0.10);
+    }
+    .slider-btn.prev{ left: 12px; }
+    .slider-btn.next{ right: 12px; }
+
+    .dots{
+      position:absolute;
+      bottom: 12px;
+      right: 14px;
+      display:flex;
+      gap: 8px;
+      z-index: 6;
+    }
+    .dot{
+      width: 8px; height: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+      cursor: pointer;
+      transition: var(--ease);
+    }
+    .dot.active{
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      border-color: rgba(255,255,255,0.0);
+      box-shadow: 0 0 18px rgba(72,231,255,0.18);
+      transform: scale(1.15);
+    }
+
+    /* ===== Essay snippets beneath slider ===== */
+    .snippets{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .snip{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(7,6,11,0.25);
+      padding: 14px 16px;
+    }
+    .snip .tag{
+      font-size: 0.62rem;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(138,92,255,0.92);
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .snip p{ margin: 0; color: rgba(245,244,255,0.74); }
+
+    /* ===== Rating footer ===== */
+    .rating{
+      margin-top: 22px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(16,14,26,0.55);
+      padding: 18px 18px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.32);
+    }
+    .rating .left{
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .rating .left .small{
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      font-size: 0.62rem;
+      color: rgba(72,231,255,0.86);
+      font-weight: 800;
+    }
+    .rating .left .big{
+      font-family: var(--serif);
+      color: var(--title);
+      font-size: 1.35rem;
+    }
+    .stars{
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(7,6,11,0.35);
+      color: rgba(255,255,255,0.92);
+      letter-spacing: 2px;
+      font-size: 1.2rem;
+      white-space: nowrap;
+    }
+    .stars span{
+      letter-spacing: 0;
+      font-size: 0.9rem;
+      color: rgba(245,244,255,0.70);
+      margin-left: 10px;
+    }
+
+    /* ===== References modal ===== */
+    .modal{
+      position: fixed; inset: 0;
+      z-index: 2000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,0.70);
+      backdrop-filter: blur(10px);
+    }
+    .modal.show{ display:flex; }
+    .modal-card{
+      width: min(680px, 92vw);
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(15,13,24,0.92);
+      padding: 20px 20px 18px;
+      box-shadow: 0 30px 120px rgba(0,0,0,0.55);
+    }
+    .modal-top{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    .modal-top h3{
+      margin: 0;
+      font-family: var(--serif);
+      color: var(--title);
+      font-size: 1.2rem;
+    }
+    .close{
+      width: 40px; height: 40px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(7,6,11,0.35);
+      color: rgba(255,255,255,0.90);
+      cursor:pointer;
+      transition: var(--ease);
+    }
+    .close:hover{
+      transform: rotate(8deg);
+      border-color: rgba(255,92,207,0.28);
+      box-shadow: 0 16px 50px rgba(255,92,207,0.10);
+    }
+    .modal-card p{
+      margin: 0;
+      color: rgba(245,244,255,0.74);
+      font-size: 0.92rem;
+      line-height: 1.9;
+      word-break: break-word;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .container{ grid-template-columns: 1fr; }
+      .stage{ position: relative; top: 0; }
+      .snippets{ grid-template-columns: 1fr; }
+      *{ cursor: auto !important; }
+      #cursor{ display:none; }
+      body::after{ display:none; } /* spotlight off on mobile */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-texture"></div>
+
+  <div id="progress"><div id="progressBar"></div></div>
+  <div id="cursor"></div>
+
+  <div class="scroll-indicator" id="scrollHint">
+    <div class="txt">Scroll</div>
+    <div class="chevrons">
+      <div class="chev"></div>
+      <div class="chev"></div>
+      <div class="chev"></div>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-inner">
+      <div class="brand">ANIME STEREOTYPE ARTIFACT</div>
+      <div class="nav-links">
+        <a href="#gallery" class="hover">Gallery</a>
+        <a href="javascript:void(0)" onclick="openModal()" class="hover">References</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- LEFT: Feature image (sticky) -->
+    <section class="stage" aria-label="Feature image panel">
+      <div class="stage-top">
+        <div class="label">SAMPLE VISUAL</div>
+        <div class="chip">STEREOTYPE • CULTURE</div>
+      </div>
+
+      <div class="stage-media">
+        <!-- Replace this with your own licensed/royalty-free image -->
+        <!-- <img src="YOUR_IMAGE_URL_HERE" alt="Anime-themed visual" /> -->
+
+        <div class="fallback">
+          <div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMjc4MDI2ZGUtOGZkNS00ZDFiLTllYTYtNGRmZDgxN2FiMjUzXkEyXkFqcGc@._V1_QL75_UY281_CR1,0,190,281_.jpg" alt="studio ghibli">
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-caption">
+        <b>Caption:</b> Anime about depression/identity
+      </div>
+    </section>
+
+    <!-- RIGHT: Main text (NOT the whole essay, but styled blocks) -->
+    <section class="panel" aria-label="Essay highlights">
+      <h1>Beating the Stereotype</h1>
+      <p class="sub">
+        by Christina Quach
+      </p>
+
+      <div class="divider-quote">
+        “It almost became a norm for me, as if animated frames and a serious story couldn’t exist at the same time.”
+      </div>
+
+      <div class="mini">
+        <div class="block">
+          <div class="kicker">INTRO</div>
+          <p>
+            If you’ve ever mentioned watching anime out loud, you’ve probably heard someone laugh and say,
+            “Ew!! anime’s for kids only!” When you started watching during the pandemic, that phrase showed up everywhere online.
+          </p>
+        </div>
+
+        <div class="block">
+          <div class="kicker">HISTORY</div>
+          <p>
+            Anime wasn’t taken seriously as a subject of Western academics until the early 2000s, when researchers started examining it across multiple fields.
+            Over time, scholarship split into different approaches, from literary interpretations to media theory.
+          </p>
+        </div>
+
+        <div class="block">
+          <div class="kicker">IMPACT</div>
+          <p>
+            The stereotype discourages people from giving anime a fair chance. When something can build communities and inspire reflection,
+            calling it childish starts sounding less like critique and more like refusal to understand.
+          </p>
+        </div>
+      </div>
+
+      <!-- Gallery section (slider) -->
+      <div class="section" id="gallery">
+        <h2>Scroll Gallery</h2>
+  
+
+        <div class="slider" aria-label="Image slider">
+          <button class="slider-btn prev hover" type="button" aria-label="Previous slide" id="prevBtn">‹</button>
+          <button class="slider-btn next hover" type="button" aria-label="Next slide" id="nextBtn">›</button>
+
+          <div class="slides" id="slides">
+            <!-- Slide 1 -->
+            <div class="slide">
+              <!-- Replace these with your own images -->
+              <img src="https://miro.medium.com/v2/resize:fit:1400/0*KbgXAAO85cabxp3S.png" alt="Gallery image 1">
+              <div class="overlay"></div>
+              <div class="note">Vinland Saga: Anime about rejecting violence and redemption.</div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="slide">
+              <img src="https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=cover,format=auto,quality=85,width=1920/keyart/GR751KNZY-backdrop_wide" alt="Gallery image 2">
+              <div class="overlay"></div>
+              <div class="note">Attack on Titan: Finding the true meaning of "freedom" beyond the walls.</div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="slide">
+              <img src="https://occ-0-8407-2218.1.nflxso.net/dnm/api/v6/E8vDc_W8CLv7-yMQu8KMEC7Rrr8/AAAABeCP9yGnGytd4m-K8NdJSURtTAP16vQKxIuxMpwao5d3pNlQzbGOQB1qE1ZUpKoOUzcrYEjAuh3GauiHWvu6hYJFgUGsXA9TuYiu.jpg?r=4a3" alt="Gallery image 3">
+              <div class="overlay"></div>
+              <div class="note">Magi: The Labyrinth of Magic: Anime about leadership and building a better world.</div>
+            </div>
+          </div>
+
+          <div class="dots" id="dots" aria-label="Slide navigation dots"></div>
+        </div>
+
+        <div class="snippets" aria-label="Essay snippets">
+          <div class="snip">
+            <div class="tag">SNIPPET 01</div>
+            <p>
+              “However, many of the stories people called ‘childish’ told stories of war, freedom, and sacrifice…”
+            </p>
+          </div>
+
+          <div class="snip">
+            <div class="tag">SNIPPET 02</div>
+            <p>
+              “Anime was not taken seriously… until the early 2000s… examining it across multiple fields.”
+            </p>
+          </div>
+
+          <div class="snip">
+            <div class="tag">SNIPPET 03</div>
+            <p>
+              “Because of this stereotype, many users decide not to give anime a fair chance in the first place.”
+            </p>
+          </div>
+
+          <div class="snip">
+            <div class="tag">SNIPPET 04</div>
+            <p>
+              “Calling it childish seems absolutely absurd and unfair.”
+            </p>
+          </div>
+        </div>
+
+        <div class="rating" aria-label="Rating section">
+          <div class="left">
+            <div class="small">RATING</div>
+            <div class="big">I DISPAPPROVE.</div>
+          </div>
+          <div class="stars">★☆☆☆☆ <span>I rate the “anime is only for kids” stereotype 1 out of 5 stars.</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- References modal -->
+  <div class="modal" id="refModal" role="dialog" aria-modal="true" aria-label="References">
+    <div class="modal-card">
+      <div class="modal-top">
+        <h3>References</h3>
+        <button class="close hover" onclick="closeModal()" aria-label="Close">×</button>
+      </div>
+      <h3>Works Cited</h3>
+<ul class="works-cited">
+
+  <li>Martin, Serena. “To The Boy Who Sought Freedom: The Philosophy of Freedom and Social Contract Theory in <i>Attack on Titan</i>.” <i>Mid-Atlantic Humanities Review</i>, vol. 3, 2025. Humanities Research Center, Lycoming College. JSTOR, https://jstor.org/stable/community.41446294. Accessed 3 Feb. 2026.</li>
+
+  <li>Allison, Brent. “Anime in Schools: Going Beyond Globalization and Standards.” <i>Mechademia: Second Arc</i>, vol. 11, no. 1, 2018, pp. 44–64. JSTOR, https://doi.org/10.5749/mech.11.1.0044. Accessed 3 Feb. 2026.</li>
+
+  <li>Horbinski, Andrea. “What You Watch Is What You Are? Early Anime and Manga Fandom in the United States.” <i>Mechademia: Second Arc</i>, vol. 12, no. 1, 2019, pp. 11–30. JSTOR, https://doi.org/10.5749/mech.12.1.0011. Accessed 3 Feb. 2026.</li>
+
+  <li>Saito, Kumiko. “Mapping Anime Scholarship in the Post-Genre Age.” <i>Science Fiction Studies</i>, vol. 46, no. 1, 2019, pp. 166–70. JSTOR, https://doi.org/10.5621/sciefictstud.46.1.0166. Accessed 3 Feb. 2026.</li>
+
+  <li>Gearhart, Bradley. “The History Behind <i>Vinland Saga</i>.” <i>Medium</i>, 17 Jan. 2023, https://bradleygearhart.medium.com/the-history-behind-vinland-saga-7a3117d04716. Accessed 3 Feb. 2026.</li>
+
+  <li><i>Attack on Titan</i>. <i>Crunchyroll</i>, https://www.crunchyroll.com/series/GR751KNZY/attack-on-titan. Accessed 3 Feb. 2026.</li>
+
+  <li><i>When Marnie Was There</i>. <i>IMDb</i>, https://www.imdb.com/title/tt3398268/. Accessed 3 Feb. 2026.</li>
+
+  <li><i>Magi: The Labyrinth of Magic</i>. <i>Netflix</i>, https://www.netflix.com/title/80009097. Accessed 3 Feb. 2026.</li>
+
+</ul>
+
+    </div>
+  </div>
+
+  <script>
+    // ===== Spotlight + cursor tracking =====
+    const cursor = document.getElementById('cursor');
+    const hoverables = document.querySelectorAll('.hover, a, button');
+
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top  = e.clientY + 'px';
+
+      document.body.style.setProperty('--mx', e.clientX + 'px');
+      document.body.style.setProperty('--my', e.clientY + 'px');
+    });
+
+    hoverables.forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('active'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+    });
+
+    // ===== Scroll progress + scroll hint =====
+    const bar = document.getElementById('progressBar');
+    const hint = document.getElementById('scrollHint');
+
+    window.addEventListener('scroll', () => {
+      const doc = document.documentElement;
+      const scrollTop = doc.scrollTop;
+      const height = doc.scrollHeight - doc.clientHeight;
+      const pct = height > 0 ? (scrollTop / height) * 100 : 0;
+      bar.style.width = pct + '%';
+
+      if (window.scrollY > 80) hint.classList.add('hidden');
+      else hint.classList.remove('hidden');
+    });
+
+    // ===== Modal =====
+    function openModal(){
+      document.getElementById('refModal').classList.add('show');
+    }
+    function closeModal(){
+      document.getElementById('refModal').classList.remove('show');
+    }
+    document.getElementById('refModal').addEventListener('click', (e) => {
+      if (e.target.id === 'refModal') closeModal();
+    });
+
+    // ===== Slider (simple, clean) =====
+    const slidesEl = document.getElementById('slides');
+    const slideCount = slidesEl.children.length;
+    const dotsEl = document.getElementById('dots');
+    let idx = 0;
+
+    function renderDots(){
+      dotsEl.innerHTML = '';
+      for(let i=0; i<slideCount; i++){
+        const d = document.createElement('button');
+        d.className = 'dot' + (i===idx ? ' active' : '');
+        d.type = 'button';
+        d.setAttribute('aria-label', 'Go to slide ' + (i+1));
+        d.addEventListener('click', () => goTo(i));
+        dotsEl.appendChild(d);
+      }
+    }
+
+    function goTo(i){
+      idx = (i + slideCount) % slideCount;
+      slidesEl.style.transform = `translateX(-${idx * 100}%)`;
+      renderDots();
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => goTo(idx - 1));
+    document.getElementById('nextBtn').addEventListener('click', () => goTo(idx + 1));
+
+    // optional autoplay (very subtle)
+    let auto = setInterval(() => goTo(idx + 1), 7000);
+    ['mouseenter','focusin'].forEach(evt => slidesEl.addEventListener(evt, () => clearInterval(auto)));
+
+    renderDots();
+    goTo(0);
+  </script>
+</body>
+</html>
+
